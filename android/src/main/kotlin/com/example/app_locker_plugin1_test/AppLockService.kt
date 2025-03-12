@@ -1,5 +1,4 @@
-package com.example.app_locker_plugin1_test;
-
+package com.example.app_locker_plugin1_test
 
 import android.R
 import android.app.Notification
@@ -14,6 +13,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.Nullable
 import io.flutter.embedding.android.FlutterActivity
 
 class AppLockService : Service() {
