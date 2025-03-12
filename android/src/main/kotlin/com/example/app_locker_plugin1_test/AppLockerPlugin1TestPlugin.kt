@@ -1,4 +1,4 @@
-package com.example.app_locker_plugin1_test;
+package com.example.app_locker_plugin1_test
 
 import android.content.Context
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -7,6 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import androidx.annotation.NonNull
+import io.flutter.embedding.engine.plugins.FlutterPluginBinding // Added import
 
 class AppLockerPlugin1TestPlugin : FlutterPlugin, MethodCallHandler {
     private var channel: MethodChannel? = null

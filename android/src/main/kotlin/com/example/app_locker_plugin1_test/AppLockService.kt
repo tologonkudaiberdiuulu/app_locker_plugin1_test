@@ -15,6 +15,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.annotation.Nullable
 import io.flutter.embedding.android.FlutterActivity
+import java.util.Collections
 
 class AppLockService : Service() {
     private var handler: Handler? = null
@@ -29,7 +30,7 @@ class AppLockService : Service() {
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("App Lock Active")
             .setContentText("Protecting your apps")
-            .setSmallIcon(R.drawable.ic_lock_lock)
+            .setSmallIcon(android.R.drawable.ic_lock_lock) // Use system icon
             .build()
 
         startForeground(1, notification)
@@ -74,8 +75,8 @@ class AppLockService : Service() {
 
     private val checkForegroundRunnable: Runnable = object : Runnable {
         override fun run() {
-            val foregroundApp: String = this.foregroundApp
-            val lockedApps: List<String> = serviceIntegration.getLockedApps()
+            val foregroundApp: String = this@AppLockService.foregroundApp
+            val lockedApps: List<String> = serviceIntegration?.getLockedApps() ?: emptyList()
 
             if (lockedApps.contains(foregroundApp)) {
                 if (foregroundApp != currentLockedApp) {
@@ -84,13 +85,11 @@ class AppLockService : Service() {
                 }
 
                 if (!appUnlocked) {
-                    // Launch Flutter activity for quiz
                     val intent: Intent = FlutterActivity.createDefaultIntent(this@AppLockService)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)
 
-                    // Set callback to be notified when the app is unlocked
-                    serviceIntegration.setUnlockCallback { appUnlocked = true }
+                    serviceIntegration?.setUnlockCallback { appUnlocked = true }
                 }
             } else {
                 currentLockedApp = ""
