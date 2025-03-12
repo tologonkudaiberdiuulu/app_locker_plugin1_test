@@ -30,7 +30,7 @@ class AppLockService : Service() {
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("App Lock Active")
             .setContentText("Protecting your apps")
-            .setSmallIcon(android.R.drawable.ic_lock_lock) // Use system icon
+            .setSmallIcon(android.R.drawable.ic_lock_lock)
             .build()
 
         startForeground(1, notification)
@@ -45,23 +45,21 @@ class AppLockService : Service() {
             try {
                 val usm = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
                 val end = System.currentTimeMillis()
-                val start = end - 1000 * 60 // Check last minute
+                val start = end - 1000 * 60
                 val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end)
 
                 if (stats != null && !stats.isEmpty()) {
                     var recentStats: UsageStats? = null
                     for (usageStats in stats) {
-                        if (recentStats == null ||
-                            recentStats.lastTimeUsed < usageStats.lastTimeUsed
-                        ) {
+                        if (recentStats == null || recentStats.lastTimeUsed < usageStats.lastTimeUsed) {
                             recentStats = usageStats
                         }
                     }
-                    return if (recentStats != null) recentStats.packageName else ""
+                    return recentStats?.packageName ?: ""
                 }
                 return ""
             } catch (e: Exception) {
-                Log.e("AppLockService", "Error getting foreground app: " + e.message)
+                Log.e("AppLockService", "Error getting foreground app: ${e.message}")
                 return ""
             }
         }
@@ -89,7 +87,11 @@ class AppLockService : Service() {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)
 
-                    serviceIntegration?.setUnlockCallback { appUnlocked = true }
+                    serviceIntegration?.setUnlockCallback(object : AppLockServiceIntegration.UnlockCallback {
+                        override fun onUnlock() {
+                            appUnlocked = true
+                        }
+                    })
                 }
             } else {
                 currentLockedApp = ""
@@ -100,7 +102,7 @@ class AppLockService : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
     }
 
@@ -116,14 +118,8 @@ class AppLockService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "AppLockChannel",
-                "App Lock",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService<NotificationManager>(
-                NotificationManager::class.java
-            )
+            val channel = NotificationChannel(CHANNEL_ID, "App Lock", NotificationManager.IMPORTANCE_LOW)
+            val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
     }

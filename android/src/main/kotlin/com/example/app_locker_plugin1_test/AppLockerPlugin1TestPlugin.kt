@@ -15,27 +15,35 @@ class AppLockerPlugin1TestPlugin : FlutterPlugin, MethodCallHandler {
     private var serviceIntegration: AppLockServiceIntegration? = null
 
     override fun onAttachedToEngine(@NonNull binding: FlutterPluginBinding) {
-        channel = MethodChannel(binding.getBinaryMessenger(), "app_locker_plugin")
-        channel.setMethodCallHandler(this)
-        context = binding.getApplicationContext()
-        serviceIntegration = AppLockServiceIntegration(context!!)
+        channel = MethodChannel(binding.binaryMessenger, "app_locker_plugin")
+        channel?.setMethodCallHandler(this) // Safe call
+        context = binding.applicationContext
+        serviceIntegration = AppLockServiceIntegration.getInstance(context)
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
-            "getLockedApps" -> result.success(serviceIntegration!!.getLockedApps())
+            "getLockedApps" -> result.success(serviceIntegration?.getLockedApps() ?: emptyList())
             "addLockedApp" -> {
-                val packageName: String = call.argument("packageName")
-                serviceIntegration!!.addLockedApp(packageName)
-                result.success(null)
+                val packageName: String? = call.argument("packageName")
+                if (packageName != null) {
+                    serviceIntegration?.addLockedApp(packageName)
+                    result.success(null)
+                } else {
+                    result.error("INVALID_ARGUMENT", "packageName is null", null)
+                }
             }
             "removeLockedApp" -> {
-                val removePackageName: String = call.argument("packageName")
-                serviceIntegration!!.removeLockedApp(removePackageName)
-                result.success(null)
+                val packageName: String? = call.argument("packageName")
+                if (packageName != null) {
+                    serviceIntegration?.removeLockedApp(packageName)
+                    result.success(null)
+                } else {
+                    result.error("INVALID_ARGUMENT", "packageName is null", null)
+                }
             }
             "notifyAppUnlocked" -> {
-                serviceIntegration!!.notifyAppUnlocked()
+                serviceIntegration?.notifyAppUnlocked()
                 result.success(null)
             }
             else -> result.notImplemented()
@@ -43,6 +51,6 @@ class AppLockerPlugin1TestPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPluginBinding?) {
-        channel.setMethodCallHandler(null)
+        channel?.setMethodCallHandler(null) // Safe call
     }
 }
